@@ -460,6 +460,18 @@ public abstract class SolidityType {
             super("bool");
         }
 
+        private static boolean byteToBoolean(byte[] encoded, int offset) {
+            // any non-zero byte in array should give true
+            // example see calls on tx: 0x2b0b2269267344b70b7daffc32554cb82a3c5f191488a992c2c4e38b37563e74
+            byte[] b = Arrays.copyOfRange(encoded, offset, offset + Int32Size);
+            for (byte value : b) {
+                if ((value & 0xFF) != 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         @Override
         public byte[] encode(Object value) {
             if (!(value instanceof Boolean)) throw new RuntimeException("Wrong value for bool type: " + value);
@@ -468,7 +480,7 @@ public abstract class SolidityType {
 
         @Override
         public Object decode(byte[] encoded, int offset) {
-            return ((Number) super.decode(encoded, offset)).intValue() != 0;
+            return byteToBoolean(encoded, offset);
         }
     }
 

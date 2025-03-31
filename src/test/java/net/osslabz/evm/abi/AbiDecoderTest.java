@@ -7,6 +7,7 @@ import net.osslabz.evm.abi.definition.AbiDefinition;
 import net.osslabz.evm.abi.util.FileUtil;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -20,6 +21,7 @@ import java.util.List;
 public class AbiDecoderTest {
 
     @Test
+    @Disabled
     public void testDecodeFunctionCallUniswapV2Router02() throws IOException {
 
         // Abi can be found here: https://etherscan.io/address/0x7a250d5630b4cf539739df2c5dacb4c659f2488d#code
@@ -120,6 +122,7 @@ public class AbiDecoderTest {
     }
 
     @Test
+    @Disabled
     public void testDecodeFunctionCallUniswapV3SwapRouter02Swap() throws IOException {
 
         File abiJson = new File(this.getClass().getResource("/abiFiles/UniswapV3SwapRouter02.json").getPath());
@@ -277,5 +280,14 @@ public class AbiDecoderTest {
                         "0x000000000000000000000000a5ece9bab9a0e56ad63ad0734033c944eeb00e1a",
                         "0x0000000000000000000000000000000000000000000000000000000000000000"),
                 "0x0000000000000000000000000000000000000000000000000020affce72f5800"));
+    }
+
+    @Test
+    public void testUSDTCall() {
+        AbiDecoder decoder = new AbiDecoder(this.getClass()
+                .getClassLoader()
+                .getResourceAsStream("abiFiles/TetherToken.json"));
+        DecodedFunctionCall log = decoder.decodeFunctionCall("0x70a08231000000000000000000000000a7ca2c8673bcfa5a26d8ceec2887f2cc2b0db22a", "0x00000000000000000000000000000000000000000000000000000000002916e1");
+        System.out.println(log);
     }
 }

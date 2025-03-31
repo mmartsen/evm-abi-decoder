@@ -69,6 +69,46 @@ public class AbiDecoder {
         return new DecodedFunctionCall(abiFunction.name, params);
     }
 
+    public DecodedFunctionCall decodeFunctionCall(String inputData, String outputData) {
+        if (inputData == null || (inputData.startsWith("0x") && inputData.length() < 10) || inputData.length() < 8) {
+            throw new IllegalArgumentException("Can't decode invalid input '" + inputData + "'.");
+        }
+        String inputNoPrefix = cleanup(inputData);
+        String outputNoPrefix = cleanup(outputData);
+
+        String methodBytes = inputNoPrefix.substring(0, 8);
+
+        if (!this.methodSignatures.containsKey(methodBytes)) {
+            //return null;
+            throw new IllegalStateException("Couldn't find method with signature " + methodBytes);
+        }
+        AbiDefinition.Entry abiEntry = this.methodSignatures.get(methodBytes);
+
+        if (!(abiEntry instanceof AbiDefinition.Function)) {
+            throw new IllegalArgumentException("Input data is not a function call, it's of type '" + abiEntry.type + "'.");
+        }
+        AbiDefinition.Function abiFunction = (AbiDefinition.Function) abiEntry;
+
+        List<DecodedFunctionCall.Param> params = new ArrayList<>(abiFunction.inputs.size());
+        List<?> decoded = abiFunction.decode(Hex.decode(inputNoPrefix));
+
+        for (int i = 0; i < decoded.size(); i++) {
+            AbiDefinition.Entry.Param paramDefinition = abiFunction.inputs.get(i);
+            DecodedFunctionCall.Param param = new DecodedFunctionCall.Param(paramDefinition.getName(), paramDefinition.getType().getName(), decoded.get(i));
+            params.add(param);
+        }
+
+        List<DecodedFunctionCall.Param> outputs = new ArrayList<>(abiFunction.outputs.size());
+        List<?> decodedOutputs = abiFunction.decodeResult(Hex.decode(outputNoPrefix));
+        for (int i = 0; i < decodedOutputs.size(); i++) {
+            AbiDefinition.Entry.Param paramDefinition = abiFunction.outputs.get(i);
+            DecodedFunctionCall.Param param = new DecodedFunctionCall.Param("_"+i, paramDefinition.getType().getName(), decodedOutputs.get(i));
+            outputs.add(param);
+        }
+
+        return new DecodedFunctionCall(abiFunction.name, params, outputs);
+    }
+
     public List<DecodedFunctionCall> decodeFunctionsCalls(String inputData) {
 
         DecodedFunctionCall decodedFunctionCall = this.decodeFunctionCall(inputData);
